@@ -1,0 +1,26 @@
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - 'mediawiki_app/Dockerfile'
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Set your ACR information
+  acrName: 'subbuacr.azurecr.io'
+  acrLoginServer: 'subbuacr.azurecr.io'
+  serviceConnection: 'subbu_acr'
+
+steps:
+- task: Docker@2
+  displayName: 'Build and push Docker image'
+  inputs:
+    command: 'buildAndPush'
+    repository: 'subbu/mediawiki'
+    dockerfile: 'mediawiki_app/Dockerfile'
+    containerRegistry: 'subbu_acr'
+    tags: |
+      $(Build.BuildId)

@@ -1,0 +1,19 @@
+{
+    "rg_name": "aks-rg",
+    "node_rg_name": "aksnode",
+    "cluster_name": "aks-mediawiki-cluster",
+    "location": "australiaeast",
+    "kube_api_version": "1.27.7",
+    "kube_system_version": "1.27.7",
+    "kube_system_node_pool_name": "system",
+    "kube_system_instance_size": "Standard_DS2_v2",
+    "env": "nonprod",
+    "kube_system_min_node_count": 2,
+    "kube_system_max_node_count": 3,
+    "kube_system_max_pods": 20,
+    "kube_system_os_disk_size_gb": 60,
+    "kube_system_pool_taints": ["CriticalAddonsOnly=true:NoSchedule"],
+    "kube_vnet_id": "",
+    "kube_subnet_id": "",
+    "kube_network_policy": ""
+}

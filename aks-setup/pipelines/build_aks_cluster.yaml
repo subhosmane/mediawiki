@@ -1,0 +1,101 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+trigger: none
+
+resources:
+ repositories:
+   - repository: self
+     name: self
+     ref: main
+     type: git
+
+variables:
+  - template: variables.yaml
+
+stages:
+  - stage: Terraform_Init_Plan
+    displayName: Terraform Initialization
+    jobs:
+      - job: terraform_init
+        displayName: Terraform Init and Plan
+        steps:
+          - checkout: self
+            persistCredentials: 'true'
+          - task: AzureCLI@2
+            displayName: 'Terraform Plan'
+            inputs:
+              azureSubscription: 'your service connection here'
+              scriptType: 'bash'
+              scriptLocation: 'scriptPath'
+              scriptPath: 'Terraform/script/terraform_init_plan.sh'
+              arguments: '--resource_group $(TF_RESOURCE_GROUP) --container_name $(CONTAINER_NAME) --storage_account $(STORAGE_ACCOUNT) --state_file_name $(STATE_FILE_NAME) --subscription_id $(SUBSCRIPTION_ID) --tenant_id $(TENANT_ID) --servicePrincipalID $(SERVICEPRINCIPALID) --servicePrincipalKey $(SERVICEPRINCIPALKEY) --var-files $(VAR_FILES)'
+              addSpnToEnvironment: true
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Terraform'
+            
+  - stage: Terraform_Apply
+    displayName: Terraform Apply
+    jobs:
+      - deployment: terraform_apply
+        displayName: Terraform Apply
+        environment: CLUSTER_DEPLOY
+        strategy:
+          runOnce:
+            deploy:
+               steps:
+                - checkout: self
+                  persistCredentials: true
+                - task: TerraformInstaller@0
+                  inputs:
+                    terraformVersion: $(terraformVersion)
+                - task: AzureCLI@2
+                  displayName: 'Terraform Apply'
+                  inputs:
+                    azureSubscription: 'your service connection here'
+                    scriptType: 'bash'
+                    scriptLocation: 'scriptPath'
+                    scriptPath: '$(System.DefaultWorkingDirectory)/Terraform/script/terraform_apply.sh'
+                    arguments: '--resource_group $(TF_RESOURCE_GROUP) --container_name $(CONTAINER_NAME) --storage_account $(STORAGE_ACCOUNT) --state_file_name $(STATE_FILE_NAME) --subscription_id $(SUBSCRIPTION_ID) --tenant_id $(TENANT_ID) --servicePrincipalID $(SERVICEPRINCIPALID) --servicePrincipalKey $(SERVICEPRINCIPALKEY) --var-files $(VAR_FILES)'
+                    addSpnToEnvironment: true
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/Terraform'
+                - script: |
+                    az login --service-principal -u $(servicePrincipalId) -p $(servicePrincipalKey) --tenant $(tenant_id)
+                    az aks get-credentials --resource-group $(TF_RESOURCE_GROUP) --name $(cluster_name)
+                  displayName: 'Azure Login and AKS Get Credentials'
+                - script: |
+                    curl -LO https://dl.k8s.io/release/v1.28.4/bin/linux/amd64/kubectl
+                    chmod +x kubectl
+                    mkdir -p ~/.local/bin
+                    mv ./kubectl ~/.local/bin/kubectl
+                    kubectl create namespace argocd
+                    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+                    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+  - stage: Terraform_Destroy
+    displayName: Terraform Destroy
+    jobs:
+      - deployment: terraform_destroy
+        displayName: Terraform Destroy
+        environment: CLUSTER_DESTROY
+        # pool: 
+        #   name: $(vmImage)
+        strategy:
+          runOnce:
+            deploy:
+               steps:
+                - checkout: self
+                  persistCredentials: true
+                - task: TerraformInstaller@0
+                  inputs:
+                    terraformVersion: $(terraformVersion)
+                - task: AzureCLI@2
+                  displayName: 'Terraform Apply'
+                  inputs:
+                    azureSubscription: 'Your service connection here'
+                    scriptType: 'bash'
+                    scriptLocation: 'scriptPath'
+                    scriptPath: '$(System.DefaultWorkingDirectory)/Terraform/script/terraform_destroy.sh'
+                    arguments: '--resource_group $(TF_RESOURCE_GROUP) --container_name $(CONTAINER_NAME) --storage_account $(STORAGE_ACCOUNT) --state_file_name $(STATE_FILE_NAME) --subscription_id $(SUBSCRIPTION_ID) --tenant_id $(TENANT_ID) --servicePrincipalID $(SERVICEPRINCIPALID) --servicePrincipalKey $(SERVICEPRINCIPALKEY) --var-files $(VAR_FILES)'
+                    addSpnToEnvironment: true
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/Terraform'

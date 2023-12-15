@@ -1,0 +1,21 @@
+variables:
+    - name: terraformVersion
+      value: 1.2.2
+    - name: SUBSCRIPTION_ID
+      value: 'SUBSCRIPTION_ID'
+    - name: TF_RESOURCE_GROUP
+      value: 'TF_RESOURCE_GROUP'
+    - name: CONTAINER_NAME
+      value: 'terraform'
+    - name: STORAGE_ACCOUNT
+      value: 'STORAGE_ACCOUNT'
+    - name: STATE_FILE_NAME
+      value: 'aks_mediawiki_cluster.tfstate'
+    - name: 'env'
+      value: 'NONPROD'
+    - name: VAR_FILES
+      value: 'aks.variable.json'
+    - name: cluster_name
+      value: 'aks-mediawiki-cluster'
+
+

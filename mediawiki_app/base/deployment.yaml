@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediawiki
+  labels:
+    kubernetes.io/app: mediawiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/app: mediawiki
+  template:
+    metadata:
+      labels:
+        kubernetes.io/app: mediawiki
+    spec:
+      containers:
+        - name: mediawiki-app
+          image: subbuacr.azurecr.io/subbu/mediawiki:542
+          ports:
+            - containerPort: 80
