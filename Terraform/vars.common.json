@@ -1,3 +1,14 @@
 {
-    "vnetName": "name"
+    "vnetName": "aks-vnet",
+    "vnet_address": ["10.10.10.0/24"],
+    "subnetName": "aks-subnet",
+    "subnet_address": ["10.10.10.0/26"],
+    "service_cidr": ["10.10.10.64/26"],
+    "dns_service_ip": "10.10.10.70",
+    "network_plugin": "azure",
+    "network_plugin_mode": "Overlay",
+    "pod_cidr": "10.244.0.0/16",
+    "docker_bridge_cidr": "172.17.0.1/16",
+    "load_balancer_sku": "Standard",
+    "private_cluster_enabled": true
 }
